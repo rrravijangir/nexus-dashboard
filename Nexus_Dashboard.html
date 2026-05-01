@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Nexus — SaaS Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// ─── MOBILE SIDEBAR ──────────────────────────────
+function toggleMobSB(){
+  const sb=document.getElementById('sb');
+  const ov=document.getElementById('sbOverlay');
+  const isOpen=sb.classList.contains('mob');
+  if(isOpen){sb.classList.remove('mob');ov.classList.remove('on');}
+  else{sb.classList.add('mob');ov.classList.add('on');}
+}
+function closeMobSB(){
+  document.getElementById('sb').classList.remove('mob');
+  document.getElementById('sbOverlay').classList.remove('on');
+}
+// Close mob sidebar on nav click (mobile)
+document.querySelectorAll('.ni[data-p]').forEach(e=>e.addEventListener('click',()=>{
+  if(window.innerWidth<=768)closeMobSB();
+}));
+// Handle window resize
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>768){
+    document.getElementById('sb').classList.remove('mob');
+    document.getElementById('sbOverlay').classList.remove('on');
+  }
+});
+
+</script>
+<style>
+/* ─── TOKENS ─── */
+[data-theme="dark"]{
+  --bg:       #070C18;
+  --surface:  #0C1220;
+  --card:     #101828;
+  --card2:    #141F30;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.12);
+  --text:     #E8F0FF;
+  --text2:    #6B84A8;
+  --text3:    #3A4F6A;
+  --inp:      #0A1020;
+  --sh:       0 1px 3px rgba(0,0,0,.5);
+  --sh2:      0 4px 20px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:       #F2F5FB;
+  --surface:  #FFFFFF;
+  --card:     #FFFFFF;
+  --card2:    #F8FAFE;
+  --border:   rgba(0,0,0,.07);
+  --border2:  rgba(0,0,0,.12);
+  --text:     #0D1B2A;
+  --text2:    #4E6580;
+  --text3:    #9AAFC4;
+  --inp:      #F2F5FB;
+  --sh:       0 1px 3px rgba(0,0,0,.06);
+  --sh2:      0 4px 20px rgba(0,0,0,.08);
+}
+:root{
+  --blue:    #3B82F6;  --blue-g:  rgba(59,130,246,.12);
+  --indigo:  #6366F1;  --indigo-g:rgba(99,102,241,.12);
+  --violet:  #8B5CF6;  --violet-g:rgba(139,92,246,.12);
+  --teal:    #14B8A6;  --teal-g:  rgba(20,184,166,.12);
+  --green:   #10B981;  --green-g: rgba(16,185,129,.12);
+  --amber:   #F59E0B;  --amber-g: rgba(245,158,11,.12);
+  --rose:    #F43F5E;  --rose-g:  rgba(244,63,94,.12);
+  --cyan:    #06B6D4;  --cyan-g:  rgba(6,182,212,.12);
+  --sw: 220px; --th: 56px; --r: 14px; --rs: 8px; --rx: 5px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+button,input,select{font-family:'Outfit',sans-serif}
+
+/* ─── SIDEBAR ─── */
+.sb{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;overflow-y:auto;overflow-x:hidden;transition:width .2s ease}
+.sb.col{width:60px}
+.sb-logo{height:var(--th);padding:0 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-m{width:30px;height:30px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;letter-spacing:-1px}
+.logo-w{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;white-space:nowrap}
+.logo-tag{font-size:9px;font-weight:600;color:var(--blue);background:var(--blue-g);border:1px solid rgba(59,130,246,.25);padding:1px 6px;border-radius:3px;letter-spacing:.5px;margin-left:auto;flex-shrink:0}
+.sb.col .logo-w,.sb.col .logo-tag{display:none}
+
+.nav-sec{padding:18px 12px 4px;font-size:9.5px;font-weight:600;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.sb.col .nav-sec{opacity:0;pointer-events:none;height:24px;padding:10px 0 4px}
+
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;margin:1px 8px;border-radius:var(--rs);cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;font-weight:500;white-space:nowrap;position:relative;user-select:none}
+.ni:hover{background:var(--card2);color:var(--text)}
+.ni.on{background:var(--blue-g);color:var(--blue);border:1px solid rgba(59,130,246,.18)}
+.ni.on .ni-icon{color:var(--blue)}
+.sb.col .ni{justify-content:center;padding:10px;margin:1px 8px}
+.sb.col .ni-label,.sb.col .nb{display:none}
+.ni-icon{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nb{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--blue);color:#fff;margin-left:auto;flex-shrink:0}
+.nb.g{background:var(--green)}
+.nb.v{background:linear-gradient(90deg,var(--violet),var(--blue))}
+
+.tip{position:absolute;left:52px;background:var(--card2);color:var(--text);font-size:12px;font-weight:500;padding:5px 10px;border-radius:6px;border:1px solid var(--border2);white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-4px);transition:all .12s;z-index:300;display:none}
+.sb.col .ni:hover .tip{opacity:1;transform:translateX(0);display:block}
+
+.sb-foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);flex-shrink:0}
+.urow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--rs);cursor:pointer;transition:background .15s}
+.urow:hover{background:var(--card2)}
+.uav{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1D4ED8,var(--violet));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.un{font-size:12.5px;font-weight:600;white-space:nowrap}
+.ur{font-size:11px;color:var(--text3)}
+.udot{width:7px;height:7px;background:var(--green);border-radius:50%;margin-left:auto;flex-shrink:0}
+.sb.col .un,.sb.col .ur,.sb.col .udot{display:none}
+
+/* ─── MAIN ─── */
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .2s ease}
+.main.exp{margin-left:60px}
+
+/* ─── TOPBAR ─── */
+.topbar{height:var(--th);background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.tb-toggle{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--rs);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;flex-shrink:0}
+.tb-toggle:hover{background:var(--card2);color:var(--text)}
+.bc{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.bc-page{font-size:14.5px;font-weight:600;white-space:nowrap}
+.bc-sep,.bc-sub{color:var(--text3);font-size:13px}
+.tb-r{display:flex;align-items:center;gap:8px;margin-left:auto}
+.search{display:flex;align-items:center;gap:8px;background:var(--inp);border:1px solid var(--border);border-radius:var(--rs);padding:6px 12px;min-width:190px;transition:border-color .15s}
+.search:focus-within{border-color:var(--blue)}
+.search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;flex:1;width:100%}
+.search input::placeholder{color:var(--text3)}
+.ib{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--rs);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;position:relative}
+.ib:hover{background:var(--card2);color:var(--text)}
+.ndot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--rose);border-radius:50%;border:1.5px solid var(--surface)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rs);font-size:13px;font-weight:500;transition:all .15s;border:none;cursor:pointer;white-space:nowrap}
+.btn-p{background:var(--blue);color:#fff}
+.btn-p:hover{background:#2563EB;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,.3)}
+.btn-g{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-g:hover{background:var(--card2);color:var(--text);border-color:var(--border2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 9px;font-size:11px}
+.theme-btn{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--rs);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--text2);background:var(--inp);cursor:pointer;transition:all .15s}
+.theme-btn:hover{border-color:var(--blue);color:var(--text)}
+
+/* ─── CONTENT ─── */
+.pg{padding:22px 24px;flex:1;display:none;animation:pgIn .3s ease}
+.pg.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── PAGE HEADER ─── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:20px;font-weight:700;letter-spacing:-.4px}
+.ph-sub{font-size:12.5px;color:var(--text3);margin-top:3px}
+.ph-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ─── DATE TABS ─── */
+.dtabs{display:flex;align-items:center;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:3px;width:fit-content}
+.dt{padding:4px 12px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.dt.on{background:var(--blue);color:#fff}
+.dt:not(.on):hover{background:var(--card2);color:var(--text)}
+
+/* ─── KPI CARDS ─── */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;cursor:default;transition:border-color .2s,transform .2s,box-shadow .2s}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue))}
+.kcard::after{content:'';position:absolute;top:-40px;right:-40px;width:110px;height:110px;border-radius:50%;background:var(--kg,var(--blue-g));filter:blur(28px);pointer-events:none}
+.kcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--sh2)}
+.kh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.kl{font-size:11.5px;font-weight:500;color:var(--text2);letter-spacing:.1px}
+.ki{width:30px;height:30px;border-radius:7px;background:var(--kg,var(--blue-g));display:flex;align-items:center;justify-content:center}
+.ki svg{width:13px;height:13px;stroke:var(--kc,var(--blue));fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kv{font-size:25px;font-weight:700;letter-spacing:-.5px;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.kf{display:flex;align-items:center;gap:7px}
+.kbadge{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.up{background:var(--green-g);color:var(--green)}
+.dn{background:var(--rose-g);color:var(--rose)}
+.kper{font-size:11px;color:var(--text3)}
+
+/* ─── CARD ─── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ch{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ct{font-size:13.5px;font-weight:600;letter-spacing:-.1px}
+.cs{font-size:11.5px;color:var(--text3);margin-top:2px}
+.cb{padding:20px}
+.cf{padding:11px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+
+/* ─── CHART LEGEND ─── */
+.leg{display:flex;gap:14px;padding:0 20px 14px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ls{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ─── TABLE ─── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:480px}
+thead th{padding:9px 18px;font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;text-align:left;background:var(--card2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(59,130,246,.03)}
+tbody td{padding:11px 18px;font-size:13px;vertical-align:middle}
+
+/* ─── BADGE ─── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--rx);font-size:11px;font-weight:600;white-space:nowrap}
+.bg{background:var(--green-g);color:var(--green)}
+.bb{background:var(--blue-g);color:var(--blue)}
+.ba{background:var(--amber-g);color:var(--amber)}
+.br{background:var(--rose-g);color:var(--rose)}
+.bv{background:var(--violet-g);color:var(--violet)}
+.bc2{background:var(--cyan-g);color:var(--cyan)}
+.bgr{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border)}
+
+/* ─── AVATAR ROW ─── */
+.avrow{display:flex;align-items:center;gap:9px}
+.av{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.an{font-size:13px;font-weight:500}
+.ae{font-size:11px;color:var(--text3)}
+
+/* ─── ACTIVITY ─── */
+.alist{}
+.ai{display:flex;align-items:flex-start;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border);transition:background .12s}
+.ai:last-child{border-bottom:none}
+.ai:hover{background:rgba(59,130,246,.02)}
+.adot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.atxt{font-size:13px;color:var(--text);line-height:1.4}
+.atxt b{color:var(--blue);font-weight:600}
+.atime{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ─── PROGRESS ─── */
+.pi{margin-bottom:13px}
+.pi:last-child{margin-bottom:0}
+.pih{display:flex;justify-content:space-between;margin-bottom:5px}
+.pil{font-size:12.5px;color:var(--text2)}
+.pip{font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.pt{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+[data-theme="light"] .pt{background:rgba(0,0,0,.06)}
+.pf{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ─── MINI STATS ─── */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.msl{font-size:11px;color:var(--text3);margin-bottom:3px}
+.msv{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.msc{font-size:11px;margin-top:2px}
+
+/* ─── FORM ─── */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.1px}
+.fi{width:100%;background:var(--inp);border:1px solid var(--border);border-radius:var(--rs);padding:8px 13px;font-size:13.5px;color:var(--text);outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--blue)}
+.fi::placeholder{color:var(--text3)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fhint{font-size:11px;color:var(--text3);margin-top:4px}
+select.fi{cursor:pointer}
+
+/* ─── TOGGLE ─── */
+.tog{display:flex;align-items:center;gap:10px;cursor:pointer}
+.tt{width:34px;height:18px;background:var(--border2);border-radius:20px;position:relative;transition:background .15s;flex-shrink:0}
+.tt.on{background:var(--blue)}
+.th2{width:12px;height:12px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tt.on .th2{left:19px}
+.tl{font-size:13px;color:var(--text2)}
+
+/* ─── STAT ROW ─── */
+.sr{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.srl{font-size:13px;color:var(--text2)}
+.srv{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace}
+
+/* ─── CHIP ─── */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:var(--rx);background:var(--card2);border:1px solid var(--border);color:var(--text2)}
+
+/* ─── NOTIFICATION PANEL ─── */
+.np{position:fixed;top:var(--th);right:0;width:300px;height:calc(100vh - var(--th));background:var(--surface);border-left:1px solid var(--border);z-index:150;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column}
+.np.on{transform:translateX(0)}
+.nph{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.npt{font-size:13.5px;font-weight:600}
+.nlist{flex:1;overflow-y:auto;padding:4px 0}
+.nitem{padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;gap:9px;align-items:flex-start}
+.nitem:hover{background:var(--card2)}
+.nitem:last-child{border-bottom:none}
+.nit{font-size:13px;font-weight:500;margin-bottom:2px}
+.nis{font-size:11.5px;color:var(--text3)}
+.nnu{width:7px;height:7px;background:var(--blue);border-radius:50%;margin-top:4px;flex-shrink:0}
+.nread{width:7px;flex-shrink:0;margin-top:4px}
+
+/* ─── MODAL ─── */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.mbg.on{display:flex}
+.mdl{background:var(--card);border:1px solid var(--border);border-radius:var(--r);max-width:460px;width:100%;animation:mIn .18s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.mh{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:15px;font-weight:700}
+.mx{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;transition:all .15s}
+.mx:hover{background:var(--card2);color:var(--text)}
+.mb{padding:18px 20px}
+.mf{padding:13px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ─── SETTINGS ─── */
+.sg{display:grid;grid-template-columns:200px 1fr;gap:18px}
+.snav{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px;height:fit-content}
+.sni{padding:8px 12px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:8px;margin:1px 0}
+.sni:hover{background:var(--card2);color:var(--text)}
+.sni.on{background:var(--blue-g);color:var(--blue)}
+.sp{display:none}
+.sp.on{display:block}
+
+/* ─── PRODUCT GRID ─── */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .2s;cursor:pointer}
+.pcard:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--sh2)}
+.pimg{height:110px;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.pbody{padding:14px}
+.pname{font-size:13.5px;font-weight:600;margin-bottom:4px}
+.pprice{font-size:17px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--blue)}
+
+/* ─── REPORT CARDS ─── */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:18px}
+.rcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:all .2s}
+.rcard:hover{border-color:var(--blue);background:var(--card2)}
+.ricon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+
+/* ─── AI LATENCY BARS ─── */
+.latbar{margin-bottom:16px}
+.latbar:last-child{margin-bottom:0}
+.lath{display:flex;justify-content:space-between;margin-bottom:8px}
+.latn{font-size:12px;font-weight:500;color:var(--text2)}
+.lata{font-size:11px;color:var(--text3)}
+.latrow{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.latp{font-size:9.5px;color:var(--text3);width:24px;flex-shrink:0}
+.latv{font-size:11px;font-family:'JetBrains Mono',monospace;width:40px;text-align:right;flex-shrink:0}
+
+/* ─── ANIMATIONS ─── */
+.fa{animation:fadeUp .35s ease both}
+.s1{animation-delay:.04s}.s2{animation-delay:.08s}.s3{animation-delay:.12s}.s4{animation-delay:.16s}.s5{animation-delay:.20s}.s6{animation-delay:.24s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── RESPONSIVE ─── */
+
+/* ─── RESPONSIVE GRID HELPERS ─── */
+.g-2col{display:grid;grid-template-columns:1.65fr 1fr;gap:14px;margin-bottom:14px}
+.g-2col-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g-2col-rev{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:14px}
+.g-2col-wide{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.g-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.g-dash-bot{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+.g-ai-perf{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+
+/* ─── MOBILE NAV OVERLAY ─── */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190}
+.sb-overlay.on{display:block}
+.mob-menu-btn{display:none;width:34px;height:34px;align-items:center;justify-content:center;border-radius:var(--rs);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;flex-shrink:0}
+
+/* ─── BREAKPOINTS ─── */
+@media(max-width:1280px){
+  :root{--sw:200px}
+  .g-3col{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:1100px){
+  .kgrid{grid-template-columns:1fr 1fr}
+  .g-2col,.g-2col-rev,.g-dash-bot,.g-ai-perf{grid-template-columns:1fr}
+  .g-2col-wide{grid-template-columns:1fr}
+  .g-3col{grid-template-columns:1fr 1fr}
+  .sg{grid-template-columns:1fr}
+}
+
+@media(max-width:768px){
+  :root{--sw:220px}
+  .sb{transform:translateX(-100%);transition:transform .25s ease;z-index:201}
+  .sb.mob{transform:translateX(0)}
+  .main{margin-left:0!important}
+  .tb-toggle{display:none}
+  .mob-menu-btn{display:flex}
+  .kgrid{grid-template-columns:1fr 1fr}
+  .g-2col,.g-2col-eq,.g-2col-rev,.g-2col-wide,.g-3col,.g-dash-bot,.g-ai-perf{grid-template-columns:1fr}
+  .search{display:none}
+  .frow,.frow2{grid-template-columns:1fr}
+  .sg{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .rgrid{grid-template-columns:1fr}
+  .ph{flex-direction:column;align-items:flex-start}
+  .ph-r{flex-wrap:wrap}
+  .np{width:100%;right:0}
+  .dtabs .dt{padding:4px 8px;font-size:11px}
+  .mdl{margin:16px;max-width:calc(100vw - 32px)}
+  .topbar{padding:0 14px;gap:8px}
+  .pg{padding:16px 14px}
+  .theme-btn span{display:none}
+  .theme-btn{padding:5px 8px}
+  .logo-m{width:26px;height:26px;font-size:12px}
+}
+
+@media(max-width:480px){
+  .kgrid{grid-template-columns:1fr}
+  .kcard .kv{font-size:22px}
+  .ph-title{font-size:17px}
+  .ch{flex-wrap:wrap;gap:8px}
+  .mgrid{grid-template-columns:1fr 1fr}
+  .btn-p.btn-sm span{display:none}
+}
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+@media(max-width:380px){.leg-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb" id="sb">
+  <div class="sb-logo">
+    <div class="logo-m">N</div>
+    <span class="logo-w">Nexus</span>
+    <span class="logo-tag">PRO</span>
+  </div>
+
+  <div class="nav-sec">Main</div>
+  <div class="ni on" data-p="dashboard">
+    <svg class="ni-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="ni-label">Dashboard</span>
+    <span class="tip">Dashboard</span>
+  </div>
+  <div class="ni" data-p="analytics">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg>
+    <span class="ni-label">Analytics</span>
+    <span class="nb">New</span>
+    <span class="tip">Analytics</span>
+  </div>
+  <div class="ni" data-p="customers">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span class="ni-label">Customers</span>
+    <span class="tip">Customers</span>
+  </div>
+  <div class="ni" data-p="orders">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <span class="ni-label">Orders</span>
+    <span class="nb g">12</span>
+    <span class="tip">Orders</span>
+  </div>
+  <div class="ni" data-p="products">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+    <span class="ni-label">Products</span>
+    <span class="tip">Products</span>
+  </div>
+  <div class="ni" data-p="revenue">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span class="ni-label">Revenue</span>
+    <span class="tip">Revenue</span>
+  </div>
+
+  <div class="nav-sec">Tools</div>
+  <div class="ni" data-p="reports">
+    <svg class="ni-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span class="ni-label">Reports</span>
+    <span class="tip">Reports</span>
+  </div>
+  <div class="ni" data-p="settings">
+    <svg class="ni-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    <span class="ni-label">Settings</span>
+    <span class="tip">Settings</span>
+  </div>
+
+  <div class="nav-sec">AI</div>
+  <div class="ni" data-p="ai" style="color:var(--violet)">
+    <svg class="ni-icon" viewBox="0 0 24 24" style="stroke:var(--violet)"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2z"/><circle cx="9" cy="13" r="1" fill="var(--violet)" stroke="none"/><circle cx="15" cy="13" r="1" fill="var(--violet)" stroke="none"/></svg>
+    <span class="ni-label">AI Monitor</span>
+    <span class="nb v">Live</span>
+    <span class="tip">AI Monitor</span>
+  </div>
+
+  <div class="sb-foot">
+    <div class="urow">
+      <div class="uav">AK</div>
+      <div style="flex:1;min-width:0">
+        <div class="un">Alex Kumar</div>
+        <div class="ur">Admin</div>
+      </div>
+      <div class="udot"></div>
+    </div>
+  </div>
+</aside>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeMobSB()"></div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="np" id="np">
+  <div class="nph">
+    <span class="npt">Notifications</span>
+    <button class="btn btn-xs btn-g" onclick="closeNP()">Mark all read</button>
+  </div>
+  <div class="nlist">
+    <div class="nitem"><div class="nnu"></div><div><div class="nit">TechFlow Inc upgraded to Enterprise</div><div class="nis">2 minutes ago</div></div></div>
+    <div class="nitem"><div class="nnu"></div><div><div class="nit">284 new signups today</div><div class="nis">18 minutes ago</div></div></div>
+    <div class="nitem"><div class="nnu"></div><div><div class="nit">NovaTech trial expires in 3 days</div><div class="nis">1 hour ago</div></div></div>
+    <div class="nitem"><div class="nread"></div><div><div class="nit" style="color:var(--text2);font-weight:400">Monthly report sent to 3 admins</div><div class="nis">5 hours ago</div></div></div>
+    <div class="nitem"><div class="nread"></div><div><div class="nit" style="color:var(--text2);font-weight:400">Server uptime: 99.98% this month</div><div class="nis">Yesterday</div></div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleMobSB()" aria-label="Open menu"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <button class="tb-toggle" onclick="toggleSB()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="bc">
+      <span class="bc-page" id="bcPage">Dashboard</span>
+      <span class="bc-sep">/</span>
+      <span class="bc-sub" id="bcSub">Overview</span>
+    </div>
+    <div class="tb-r">
+      <div class="search">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search…">
+      </div>
+      <button class="theme-btn" onclick="toggleTheme()">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" id="ticon"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <span id="tlabel">Light</span>
+      </button>
+      <button class="ib" onclick="toggleNP()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="ndot"></span>
+      </button>
+      <button class="btn btn-p btn-sm" onclick="openM()">
+        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Report
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="pg on" id="page-dashboard">
+    <div class="ph fa">
+      <div><div class="ph-title">Dashboard</div><div class="ph-sub">Welcome back, Alex — here's what's happening.</div></div>
+      <div class="ph-r">
+        <div class="dtabs"><div class="dt">Today</div><div class="dt">7D</div><div class="dt on">30D</div><div class="dt">3M</div><div class="dt">Year</div></div>
+        <button class="btn btn-g btn-sm">↓ Export</button>
+      </div>
+    </div>
+
+    <div class="kgrid">
+      <div class="kcard fa s1" style="--kc:var(--blue);--kg:var(--blue-g)">
+        <div class="kh"><span class="kl">Monthly Revenue</span><div class="ki"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
+        <div class="kv">$48,295</div>
+        <div class="kf"><span class="kbadge up">▲ 18.4%</span><span class="kper">vs last month</span></div>
+      </div>
+      <div class="kcard fa s2" style="--kc:var(--green);--kg:var(--green-g)">
+        <div class="kh"><span class="kl">Active Users</span><div class="ki"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div>
+        <div class="kv">12,847</div>
+        <div class="kf"><span class="kbadge up">▲ 6.2%</span><span class="kper">vs last month</span></div>
+      </div>
+      <div class="kcard fa s3" style="--kc:var(--violet);--kg:var(--violet-g)">
+        <div class="kh"><span class="kl">Conversion Rate</span><div class="ki"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div></div>
+        <div class="kv">4.73%</div>
+        <div class="kf"><span class="kbadge up">▲ 0.8%</span><span class="kper">vs last month</span></div>
+      </div>
+      <div class="kcard fa s4" style="--kc:var(--amber);--kg:var(--amber-g)">
+        <div class="kh"><span class="kl">Churn Rate</span><div class="ki"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
+        <div class="kv">2.14%</div>
+        <div class="kf"><span class="kbadge dn">▼ 0.3%</span><span class="kper">improvement</span></div>
+      </div>
+    </div>
+
+    <div class="g-2col fa s5">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Revenue Overview</div><div class="cs">Monthly recurring revenue vs target</div></div><div style="display:flex;gap:6px"><button class="btn btn-xs btn-g">MRR</button><button class="btn btn-xs btn-g">ARR</button></div></div>
+        <div class="leg"><div class="li"><div class="ld" style="background:var(--blue)"></div>Revenue</div><div class="li"><div class="ld" style="background:var(--violet);opacity:.5"></div>Target</div></div>
+        <div style="padding:0 20px 20px"><canvas id="revChart" height="185"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div><div class="ct">Traffic Sources</div><div class="cs">April 2026</div></div></div>
+        <div style="padding:12px 20px;display:flex;justify-content:center"><canvas id="donut1" style="max-width:150px;max-height:150px"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 20px 18px" class="leg-grid">
+          <div class="li"><div class="ls" style="background:#3B82F6"></div>Organic 42%</div>
+          <div class="li"><div class="ls" style="background:#8B5CF6"></div>Paid 28%</div>
+          <div class="li"><div class="ls" style="background:#10B981"></div>Referral 18%</div>
+          <div class="li"><div class="ls" style="background:#F59E0B"></div>Direct 12%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g-dash-bot fa s6">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Top Customers</div><div class="cs">By MRR contribution</div></div><button class="btn btn-xs btn-g" onclick="nav('customers')">View All →</button></div>
+        <div class="tw"><table>
+          <thead><tr><th>Customer</th><th>Plan</th><th>MRR</th><th>Status</th></tr></thead>
+          <tbody id="dashCustTbody"></tbody>
+        </table></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="ch"><div class="ct">Quick Stats</div><span class="chip">Apr 2026</span></div>
+          <div class="mgrid">
+            <div><div class="msl">New Signups</div><div class="msv">1,284</div><div class="msc" style="color:var(--green)">▲ +12.4%</div></div>
+            <div><div class="msl">Avg Session</div><div class="msv">8m 42s</div><div class="msc" style="color:var(--green)">▲ +1.2%</div></div>
+            <div><div class="msl">Open Tickets</div><div class="msv">23</div><div class="msc" style="color:var(--rose)">▲ +5 today</div></div>
+            <div><div class="msl">NPS Score</div><div class="msv">72</div><div class="msc" style="color:var(--green)">▲ +4 pts</div></div>
+          </div>
+          <div style="padding:14px 20px">
+            <div class="pi"><div class="pih"><span class="pil">Monthly Goal</span><span class="pip">82%</span></div><div class="pt"><div class="pf" style="width:82%;background:var(--blue)"></div></div></div>
+            <div class="pi"><div class="pih"><span class="pil">Customer Satisfaction</span><span class="pip">94%</span></div><div class="pt"><div class="pf" style="width:94%;background:var(--green)"></div></div></div>
+            <div class="pi"><div class="pih"><span class="pil">Feature Adoption</span><span class="pip">61%</span></div><div class="pt"><div class="pf" style="width:61%;background:var(--violet)"></div></div></div>
+          </div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="ch"><div class="ct">Recent Activity</div><button class="btn btn-xs btn-g">See all</button></div>
+          <div class="alist">
+            <div class="ai"><div class="adot" style="background:var(--green)"></div><div><div class="atxt"><b>TechFlow Inc</b> upgraded to Enterprise</div><div class="atime">2 min ago</div></div></div>
+            <div class="ai"><div class="adot" style="background:var(--blue)"></div><div><div class="atxt"><b>284 new users</b> signed up today</div><div class="atime">18 min ago</div></div></div>
+            <div class="ai"><div class="adot" style="background:var(--amber)"></div><div><div class="atxt"><b>NovaTech LLC</b> trial expires in 3 days</div><div class="atime">1 hr ago</div></div></div>
+            <div class="ai"><div class="adot" style="background:var(--rose)"></div><div><div class="atxt"><b>FinanceFlow App</b> cancelled subscription</div><div class="atime">3 hr ago</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ANALYTICS ═══ -->
+  <div class="pg" id="page-analytics">
+    <div class="ph fa"><div><div class="ph-title">Analytics</div><div class="ph-sub">Deep dive into user behavior and engagement.</div></div><div class="ph-r"><select class="fi" style="width:auto;padding:5px 11px;font-size:12px"><option>Last 30 Days</option><option>Last 7 Days</option><option>Last 3 Months</option></select><button class="btn btn-g btn-sm">Export CSV</button></div></div>
+    <div class="kgrid">
+      <div class="kcard fa s1" style="--kc:var(--cyan);--kg:var(--cyan-g)"><div class="kh"><span class="kl">Page Views</span><div class="ki" style="background:var(--cyan-g)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div><div class="kv">284,193</div><div class="kf"><span class="kbadge up">▲ 22.1%</span><span class="kper">vs last month</span></div></div>
+      <div class="kcard fa s2" style="--kc:var(--green);--kg:var(--green-g)"><div class="kh"><span class="kl">Bounce Rate</span><div class="ki"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div></div><div class="kv">34.2%</div><div class="kf"><span class="kbadge dn">▼ 3.1%</span><span class="kper">improvement</span></div></div>
+      <div class="kcard fa s3" style="--kc:var(--violet);--kg:var(--violet-g)"><div class="kh"><span class="kl">Avg Session</span><div class="ki" style="background:var(--violet-g)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="kv">8m 42s</div><div class="kf"><span class="kbadge up">▲ 1.2%</span><span class="kper">vs last month</span></div></div>
+      <div class="kcard fa s4" style="--kc:var(--blue);--kg:var(--blue-g)"><div class="kh"><span class="kl">Events Tracked</span><div class="ki"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div><div class="kv">1.82M</div><div class="kf"><span class="kbadge up">▲ 31.4%</span><span class="kper">vs last month</span></div></div>
+    </div>
+    <div class="g-3col fa s5">
+      <div class="card"><div class="ch"><div><div class="ct">Daily Active Users</div><div class="cs">Last 30 days</div></div></div><div style="padding:8px 20px 18px"><canvas id="dauChart" height="155"></canvas></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Device Breakdown</div><div class="cs">Sessions by device</div></div></div><div style="padding:8px 20px 18px"><canvas id="devChart" height="155"></canvas></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Top Countries</div><div class="cs">By user count</div></div></div>
+        <div style="padding:16px 20px">
+          <div class="pi"><div class="pih"><span class="pil">🇺🇸 United States</span><span class="pip">48%</span></div><div class="pt"><div class="pf" style="width:48%;background:var(--blue)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">🇬🇧 United Kingdom</span><span class="pip">14%</span></div><div class="pt"><div class="pf" style="width:14%;background:var(--violet)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">🇩🇪 Germany</span><span class="pip">11%</span></div><div class="pt"><div class="pf" style="width:11%;background:var(--cyan)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">🇨🇦 Canada</span><span class="pip">9%</span></div><div class="pt"><div class="pf" style="width:9%;background:var(--green)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">🇮🇳 India</span><span class="pip">8%</span></div><div class="pt"><div class="pf" style="width:8%;background:var(--amber)"></div></div></div>
+          <div class="pi" style="margin-bottom:0"><div class="pih"><span class="pil">🌍 Others</span><span class="pip">10%</span></div><div class="pt"><div class="pf" style="width:10%;background:var(--text3)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CUSTOMERS ═══ -->
+  <div class="pg" id="page-customers">
+    <div class="ph fa"><div><div class="ph-title">Customers</div><div class="ph-sub">Manage and track your entire customer base.</div></div>
+      <div class="ph-r">
+        <div class="search" style="display:flex"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search customers…" id="cSearch" oninput="filterC()"></div>
+        <select class="fi" style="width:auto;padding:5px 11px;font-size:12px" onchange="filterC()" id="cPlan"><option value="">All Plans</option><option>Enterprise</option><option>Pro</option><option>Starter</option></select>
+        <button class="btn btn-p btn-sm" onclick="openM()">+ Add Customer</button>
+      </div>
+    </div>
+    <div class="card fa s1">
+      <div class="ch"><div><div class="ct">All Customers</div><div class="cs" id="cCount">13 customers</div></div><div style="display:flex;gap:6px"><button class="btn btn-xs btn-g">Export</button></div></div>
+      <div class="tw"><table><thead><tr><th>Customer</th><th>Email</th><th>Plan</th><th>MRR</th><th>Status</th><th>Joined</th><th></th></tr></thead><tbody id="cTbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ═══ ORDERS ═══ -->
+  <div class="pg" id="page-orders">
+    <div class="ph fa"><div><div class="ph-title">Orders</div><div class="ph-sub">Track and manage all incoming orders.</div></div><div class="ph-r"><button class="btn btn-g btn-sm">Export</button><button class="btn btn-p btn-sm">+ New Order</button></div></div>
+    <div class="kgrid fa s1">
+      <div class="kcard" style="--kc:var(--blue);--kg:var(--blue-g)"><div class="kh"><span class="kl">Total Orders</span></div><div class="kv">1,284</div><div class="kf"><span class="kbadge up">▲ 8.2%</span><span class="kper">this month</span></div></div>
+      <div class="kcard" style="--kc:var(--amber);--kg:var(--amber-g)"><div class="kh"><span class="kl">Pending</span></div><div class="kv">12</div><div class="kf"><span class="kbadge ba">Action needed</span></div></div>
+      <div class="kcard" style="--kc:var(--green);--kg:var(--green-g)"><div class="kh"><span class="kl">Completed</span></div><div class="kv">1,248</div><div class="kf"><span class="kbadge up">97.2%</span><span class="kper">success rate</span></div></div>
+      <div class="kcard" style="--kc:var(--rose);--kg:var(--rose-g)"><div class="kh"><span class="kl">Refunded</span></div><div class="kv">24</div><div class="kf"><span class="kbadge dn">1.9%</span><span class="kper">refund rate</span></div></div>
+    </div>
+    <div class="card fa s2"><div class="ch"><div class="ct">Recent Orders</div><button class="btn btn-xs btn-g">View All</button></div>
+      <div class="tw"><table><thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">#4892</td><td><div class="avrow"><div class="av" style="background:linear-gradient(135deg,#3B82F6,#8B5CF6)">TF</div><div><div class="an">TechFlow Inc</div></div></div></td><td>Enterprise Plan</td><td style="font-family:'JetBrains Mono',monospace;font-weight:600">$4,200</td><td style="color:var(--text2)">Apr 22</td><td><span class="badge bg">● Completed</span></td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">#4891</td><td><div class="avrow"><div class="av" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)">SM</div><div><div class="an">Sarah Mitchell</div></div></div></td><td>Pro Annual</td><td style="font-family:'JetBrains Mono',monospace;font-weight:600">$1,188</td><td style="color:var(--text2)">Apr 21</td><td><span class="badge bg">● Completed</span></td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">#4890</td><td><div class="avrow"><div class="av" style="background:linear-gradient(135deg,#F59E0B,#D97706)">NT</div><div><div class="an">NovaTech LLC</div></div></div></td><td>Pro Monthly</td><td style="font-family:'JetBrains Mono',monospace;font-weight:600">$149</td><td style="color:var(--text2)">Apr 20</td><td><span class="badge ba">⊖ Pending</span></td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">#4889</td><td><div class="avrow"><div class="av" style="background:linear-gradient(135deg,#10B981,#059669)">BA</div><div><div class="an">Bloom Agency</div></div></div></td><td>Pro Annual</td><td style="font-family:'JetBrains Mono',monospace;font-weight:600">$1,188</td><td style="color:var(--text2)">Apr 19</td><td><span class="badge bg">● Completed</span></td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">#4888</td><td><div class="avrow"><div class="av" style="background:linear-gradient(135deg,#EF4444,#DC2626)">FF</div><div><div class="an">FinanceFlow</div></div></div></td><td>Pro Monthly</td><td style="font-family:'JetBrains Mono',monospace;font-weight:600">$149</td><td style="color:var(--text2)">Apr 18</td><td><span class="badge br">✕ Refunded</span></td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ═══ PRODUCTS ═══ -->
+  <div class="pg" id="page-products">
+    <div class="ph fa"><div><div class="ph-title">Products</div><div class="ph-sub">Manage subscription plans and product catalog.</div></div><div class="ph-r"><button class="btn btn-g btn-sm">Import</button><button class="btn btn-p btn-sm">+ Add Product</button></div></div>
+    <div class="pgrid fa s1">
+      <div class="pcard"><div class="pimg" style="background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.03))">🚀</div><div class="pbody"><div class="pname">Starter Plan</div><div style="font-size:12px;color:var(--text3);margin:3px 0 10px">Basic features for individuals</div><div class="pprice">$49<span style="font-size:12px;color:var(--text3);font-weight:400;font-family:'Outfit',sans-serif">/mo</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><span class="badge bg">Active</span><button class="btn btn-xs btn-g">Edit</button></div></div></div>
+      <div class="pcard"><div class="pimg" style="background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.04))">⚡</div><div class="pbody"><div class="pname">Pro Plan</div><div style="font-size:12px;color:var(--text3);margin:3px 0 10px">Advanced tools for growing teams</div><div class="pprice">$149<span style="font-size:12px;color:var(--text3);font-weight:400;font-family:'Outfit',sans-serif">/mo</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><span class="badge bg">Active</span><button class="btn btn-xs btn-g">Edit</button></div></div></div>
+      <div class="pcard" style="border-color:rgba(59,130,246,.3)"><div class="pimg" style="background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(139,92,246,.05))">🏆</div><div class="pbody"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div class="pname">Enterprise</div><span class="badge bv" style="font-size:9px">Popular</span></div><div style="font-size:12px;color:var(--text3);margin:3px 0 10px">Full power for large orgs</div><div class="pprice">$349<span style="font-size:12px;color:var(--text3);font-weight:400;font-family:'Outfit',sans-serif">/mo</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><span class="badge bg">Active</span><button class="btn btn-xs btn-g">Edit</button></div></div></div>
+      <div class="pcard"><div class="pimg" style="background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03))">🎓</div><div class="pbody"><div class="pname">Analytics+</div><div style="font-size:12px;color:var(--text3);margin:3px 0 10px">Extended analytics add-on</div><div class="pprice">$29<span style="font-size:12px;color:var(--text3);font-weight:400;font-family:'Outfit',sans-serif">/mo</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><span class="badge bg">Active</span><button class="btn btn-xs btn-g">Edit</button></div></div></div>
+      <div class="pcard"><div class="pimg" style="background:linear-gradient(135deg,rgba(6,182,212,.1),rgba(6,182,212,.03))">🔌</div><div class="pbody"><div class="pname">API Access</div><div style="font-size:12px;color:var(--text3);margin:3px 0 10px">Full REST API with rate limits</div><div class="pprice">$49<span style="font-size:12px;color:var(--text3);font-weight:400;font-family:'Outfit',sans-serif">/mo</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><span class="badge bg">Active</span><button class="btn btn-xs btn-g">Edit</button></div></div></div>
+      <div class="pcard" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:180px;cursor:pointer" onclick="openM()"><div style="text-align:center;color:var(--text3)"><div style="font-size:26px;margin-bottom:6px">+</div><div style="font-size:13px">Add Product</div></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ REVENUE ═══ -->
+  <div class="pg" id="page-revenue">
+    <div class="ph fa"><div><div class="ph-title">Revenue</div><div class="ph-sub">Financial performance and subscription metrics.</div></div><div class="ph-r"><button class="btn btn-g btn-sm">Export Report</button></div></div>
+    <div class="kgrid fa s1">
+      <div class="kcard" style="--kc:var(--blue);--kg:var(--blue-g)"><div class="kh"><span class="kl">MRR</span></div><div class="kv">$48,295</div><div class="kf"><span class="kbadge up">▲ 18.4%</span><span class="kper">MoM</span></div></div>
+      <div class="kcard" style="--kc:var(--green);--kg:var(--green-g)"><div class="kh"><span class="kl">ARR</span></div><div class="kv">$579k</div><div class="kf"><span class="kbadge up">▲ 18.4%</span><span class="kper">annualized</span></div></div>
+      <div class="kcard" style="--kc:var(--violet);--kg:var(--violet-g)"><div class="kh"><span class="kl">ARPU</span></div><div class="kv">$124</div><div class="kf"><span class="kbadge up">▲ 4.2%</span><span class="kper">per user</span></div></div>
+      <div class="kcard" style="--kc:var(--cyan);--kg:var(--cyan-g)"><div class="kh"><span class="kl">LTV</span></div><div class="kv">$2,480</div><div class="kf"><span class="kbadge up">▲ 9.1%</span><span class="kper">lifetime value</span></div></div>
+    </div>
+    <div class="g-2col-wide fa s2">
+      <div class="card">
+        <div class="ch"><div><div class="ct">MRR Growth</div><div class="cs">12-month revenue trend</div></div></div>
+        <div class="leg"><div class="li"><div class="ld" style="background:var(--green)"></div>New MRR</div><div class="li"><div class="ld" style="background:var(--rose)"></div>Churned</div><div class="li"><div class="ld" style="background:var(--blue)"></div>Net MRR</div></div>
+        <div style="padding:0 20px 20px"><canvas id="mrrChart" height="195"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Revenue by Plan</div></div>
+        <div style="padding:14px 20px">
+          <div class="sr"><span class="srl">Enterprise</span><span class="srv" style="color:var(--violet)">$24,500</span></div>
+          <div class="sr"><span class="srl">Pro</span><span class="srv" style="color:var(--blue)">$17,880</span></div>
+          <div class="sr"><span class="srl">Starter</span><span class="srv" style="color:var(--green)">$5,915</span></div>
+          <div class="sr"><span class="srl">Add-ons</span><span class="srv" style="color:var(--amber)">$1,540</span></div>
+          <div class="sr" style="border-top:2px solid var(--border2);margin-top:6px;padding-top:10px"><span class="srl" style="font-weight:700;color:var(--text)">Total MRR</span><span class="srv" style="font-size:15px;color:var(--blue)">$48,295</span></div>
+        </div>
+        <div style="padding:0 20px 14px">
+          <div class="pi"><div class="pih"><span class="pil">Enterprise</span><span class="pip" style="color:var(--violet)">50.7%</span></div><div class="pt"><div class="pf" style="width:51%;background:var(--violet)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">Pro</span><span class="pip" style="color:var(--blue)">37.0%</span></div><div class="pt"><div class="pf" style="width:37%;background:var(--blue)"></div></div></div>
+          <div class="pi"><div class="pih"><span class="pil">Starter</span><span class="pip" style="color:var(--green)">12.3%</span></div><div class="pt"><div class="pf" style="width:12%;background:var(--green)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REPORTS ═══ -->
+  <div class="pg" id="page-reports">
+    <div class="ph fa"><div><div class="ph-title">Reports</div><div class="ph-sub">Generate and schedule business reports.</div></div><div class="ph-r"><button class="btn btn-p btn-sm" onclick="openM()">+ Schedule Report</button></div></div>
+    <div class="rgrid fa s1">
+      <div class="rcard"><div class="ricon" style="background:var(--blue-g)">📊</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Monthly Performance</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">Revenue, users, conversion — full summary</div><span class="badge bg">Updated daily</span></div></div>
+      <div class="rcard"><div class="ricon" style="background:var(--violet-g)">💰</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Financial Summary</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">MRR, ARR, LTV, churn deep dive</div><span class="badge bb">April 2026</span></div></div>
+      <div class="rcard"><div class="ricon" style="background:var(--green-g)">👥</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Customer Health</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">At-risk customers, NPS, satisfaction</div><span class="badge ba">3 at-risk</span></div></div>
+      <div class="rcard"><div class="ricon" style="background:var(--cyan-g)">📈</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Growth Report</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">Acquisition channels, CAC, trends</div><span class="badge bg">Updated weekly</span></div></div>
+      <div class="rcard"><div class="ricon" style="background:var(--amber-g)">🔄</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Churn Analysis</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">Cancellations, reasons, recovery</div><span class="badge br">2.14% churn</span></div></div>
+      <div class="rcard"><div class="ricon" style="background:var(--rose-g)">📦</div><div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Product Usage</div><div style="font-size:12px;color:var(--text3);margin-bottom:8px">Feature adoption, drop-off points</div><span class="badge bb">Live data</span></div></div>
+    </div>
+    <div class="card fa s2"><div class="ch"><div class="ct">Scheduled Reports</div></div>
+      <div class="tw"><table><thead><tr><th>Report</th><th>Frequency</th><th>Recipients</th><th>Last Sent</th><th>Status</th><th></th></tr></thead><tbody>
+        <tr><td style="font-weight:500">Monthly Performance</td><td>Monthly</td><td>3 admins</td><td style="color:var(--text2)">Apr 1, 2026</td><td><span class="badge bg">● Active</span></td><td><button class="btn btn-xs btn-g">Edit</button></td></tr>
+        <tr><td style="font-weight:500">Weekly Digest</td><td>Weekly</td><td>5 users</td><td style="color:var(--text2)">Apr 21, 2026</td><td><span class="badge bg">● Active</span></td><td><button class="btn btn-xs btn-g">Edit</button></td></tr>
+        <tr><td style="font-weight:500">Churn Alert</td><td>Daily</td><td>1 admin</td><td style="color:var(--text2)">Apr 27, 2026</td><td><span class="badge ba">⊖ Paused</span></td><td><button class="btn btn-xs btn-g">Edit</button></td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS ═══ -->
+  <div class="pg" id="page-settings">
+    <div class="ph fa"><div><div class="ph-title">Settings</div><div class="ph-sub">Manage account and workspace preferences.</div></div></div>
+    <div class="sg fa s1">
+      <div class="snav">
+        <div class="sni on" data-panel="profile"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div>
+        <div class="sni" data-panel="notifs"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>Notifications</div>
+        <div class="sni" data-panel="billing"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing</div>
+        <div class="sni" data-panel="security"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Security</div>
+        <div class="sni" data-panel="api"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>API Keys</div>
+      </div>
+      <div>
+        <div class="sp on card" id="panel-profile">
+          <div class="ch"><div class="ct">Profile Settings</div></div>
+          <div class="cb">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+              <div class="uav" style="width:50px;height:50px;font-size:16px;border-radius:12px">AK</div>
+              <div><div style="font-size:14px;font-weight:600">Alex Kumar</div><div style="font-size:12px;color:var(--text3);margin:2px 0 8px">alex@freelancekit.io</div><button class="btn btn-xs btn-g">Change Photo</button></div>
+            </div>
+            <div class="frow"><div class="fg"><label class="fl">First Name</label><input class="fi" value="Alex"></div><div class="fg"><label class="fl">Last Name</label><input class="fi" value="Kumar"></div></div>
+            <div class="fg"><label class="fl">Email</label><input class="fi" value="alex@freelancekit.io" type="email"></div>
+            <div class="fg"><label class="fl">Role</label><select class="fi"><option>Admin</option><option>Editor</option><option>Viewer</option></select></div>
+          </div>
+          <div class="cf"><button class="btn btn-g btn-sm">Cancel</button><button class="btn btn-p btn-sm">Save Changes</button></div>
+        </div>
+        <div class="sp card" id="panel-notifs">
+          <div class="ch"><div class="ct">Notification Preferences</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13.5px;font-weight:500">New customer signups</div><div style="font-size:12px;color:var(--text3)">Notify when a new user signs up</div></div><label class="tog" onclick="this.querySelector('.tt').classList.toggle('on')"><div class="tt on"><div class="th2"></div></div></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13.5px;font-weight:500">Plan upgrades</div><div style="font-size:12px;color:var(--text3)">Notify when a customer upgrades</div></div><label class="tog" onclick="this.querySelector('.tt').classList.toggle('on')"><div class="tt on"><div class="th2"></div></div></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13.5px;font-weight:500">Payment failures</div><div style="font-size:12px;color:var(--text3)">Alert when a payment fails</div></div><label class="tog" onclick="this.querySelector('.tt').classList.toggle('on')"><div class="tt on"><div class="th2"></div></div></label></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:13.5px;font-weight:500">Weekly summary email</div><div style="font-size:12px;color:var(--text3)">Weekly digest of key metrics</div></div><label class="tog" onclick="this.querySelector('.tt').classList.toggle('on')"><div class="tt on"><div class="th2"></div></div></label></div>
+          </div>
+          <div class="cf" style="justify-content:flex-end"><button class="btn btn-p btn-sm">Save Preferences</button></div>
+        </div>
+        <div class="sp card" id="panel-billing">
+          <div class="ch"><div class="ct">Billing & Subscription</div></div>
+          <div class="cb">
+            <div style="background:var(--blue-g);border:1px solid rgba(59,130,246,.2);border-radius:var(--rs);padding:14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px"><div><div style="font-size:13px;font-weight:600;color:var(--blue)">Nexus Pro Plan</div><div style="font-size:12px;color:var(--text2)">$349/month · Renews May 27, 2026</div></div><button class="btn btn-g btn-sm">Manage Plan</button></div>
+            <div class="fg"><label class="fl">Payment Method</label><div style="display:flex;align-items:center;gap:10px;background:var(--inp);border:1px solid var(--border);border-radius:var(--rs);padding:8px 13px"><span style="font-size:15px">💳</span><span style="font-size:13px">Visa ending in 4242</span><button class="btn btn-xs btn-g" style="margin-left:auto">Update</button></div></div>
+            <div class="fg"><label class="fl">Billing Email</label><input class="fi" value="billing@freelancekit.io"></div>
+          </div>
+        </div>
+        <div class="sp card" id="panel-security">
+          <div class="ch"><div class="ct">Security</div></div>
+          <div class="cb">
+            <div class="fg"><label class="fl">Current Password</label><input class="fi" type="password" placeholder="••••••••"></div>
+            <div class="frow"><div class="fg"><label class="fl">New Password</label><input class="fi" type="password" placeholder="••••••••"></div><div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" placeholder="••••••••"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);margin-top:4px"><div><div style="font-size:13.5px;font-weight:500">Two-Factor Authentication</div><div style="font-size:12px;color:var(--text3)">Add an extra layer of security</div></div><label class="tog" onclick="this.querySelector('.tt').classList.toggle('on')"><div class="tt on"><div class="th2"></div></div></label></div>
+          </div>
+          <div class="cf"><button class="btn btn-g btn-sm">Cancel</button><button class="btn btn-p btn-sm">Update Password</button></div>
+        </div>
+        <div class="sp card" id="panel-api">
+          <div class="ch"><div class="ct">API Keys</div><button class="btn btn-p btn-sm" onclick="openM()">+ Generate Key</button></div>
+          <div class="cb">
+            <div style="background:var(--amber-g);border:1px solid rgba(245,158,11,.2);border-radius:var(--rs);padding:11px 13px;margin-bottom:16px;font-size:12.5px;color:var(--amber)">⚠ Keep your API keys secret. Never expose them in client-side code.</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:13px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">Production Key</span><span class="badge bg">Active</span></div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);background:var(--inp);padding:7px 11px;border-radius:5px">nxs_live_ak_••••••••••••••••4f2a</div><div style="font-size:11px;color:var(--text3);margin-top:5px">Created Apr 1, 2026 · Last used 2 hours ago</div></div>
+              <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:13px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">Test Key</span><span class="badge bgr">Test</span></div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);background:var(--inp);padding:7px 11px;border-radius:5px">nxs_test_ak_••••••••••••••••8b1c</div><div style="font-size:11px;color:var(--text3);margin-top:5px">Created Mar 15, 2026 · Last used 5 days ago</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ AI MONITOR ═══ -->
+  <div class="pg" id="page-ai">
+    <div class="ph fa">
+      <div>
+        <div class="ph-title" style="display:flex;align-items:center;gap:10px">
+          AI Monitor
+          <span style="font-size:10px;font-weight:700;background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;padding:2px 9px;border-radius:20px;letter-spacing:.3px">LIVE</span>
+        </div>
+        <div class="ph-sub">Real-time model performance, token usage, cost and API health.</div>
+      </div>
+      <div class="ph-r">
+        <span class="chip" id="aiUp">Updated just now</span>
+        <select class="fi" style="width:auto;padding:5px 11px;font-size:12px" id="aiFilter" onchange="aiFilterChange()">
+          <option value="all">All Models</option><option value="gpt4">GPT-4o</option><option value="claude">Claude 3.5</option><option value="gemini">Gemini 1.5</option><option value="llama">Llama 3.3</option>
+        </select>
+        <button class="btn btn-p btn-sm" id="aiRefBtn" onclick="aiRefresh()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <div class="kgrid fa s1">
+      <div class="kcard" style="--kc:var(--violet);--kg:var(--violet-g)"><div class="kh"><span class="kl">Total API Calls</span><div class="ki" style="background:var(--violet-g)"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--violet);fill:none;stroke-width:2;stroke-linecap:round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div></div><div class="kv">2.84M</div><div class="kf"><span class="kbadge up">▲ 24.1%</span><span class="kper">vs last month</span></div></div>
+      <div class="kcard" style="--kc:var(--cyan);--kg:var(--cyan-g)"><div class="kh"><span class="kl">Tokens Used</span><div class="ki" style="background:var(--cyan-g)"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--cyan);fill:none;stroke-width:2;stroke-linecap:round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div></div><div class="kv">18.4B</div><div class="kf"><span class="kbadge up">▲ 31.2%</span><span class="kper">vs last month</span></div></div>
+      <div class="kcard" style="--kc:var(--green);--kg:var(--green-g)"><div class="kh"><span class="kl">Avg Latency</span><div class="ki"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="kv">428ms</div><div class="kf"><span class="kbadge dn">▼ 12ms</span><span class="kper">improvement</span></div></div>
+      <div class="kcard" style="--kc:var(--amber);--kg:var(--amber-g)"><div class="kh"><span class="kl">Monthly Cost</span><div class="ki" style="background:var(--amber-g)"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--amber);fill:none;stroke-width:2;stroke-linecap:round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="kv">$3,247</div><div class="kf"><span class="kbadge up">▲ 18.4%</span><span class="kper">budget: $4,000</span></div></div>
+    </div>
+
+    <div class="g-2col fa s2">
+      <div class="card">
+        <div class="ch"><div><div class="ct">API Call Volume</div><div class="cs">Requests per hour — last 24h</div></div><span class="badge bg">● Healthy</span></div>
+        <div class="leg"><div class="li"><div class="ld" style="background:var(--violet)"></div>Total calls</div><div class="li"><div class="ld" style="background:var(--rose)"></div>Errors</div></div>
+        <div style="padding:0 20px 20px"><canvas id="aiCallsChart" height="170"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div><div class="ct">Model Usage</div><div class="cs">By request share</div></div></div>
+        <div style="padding:12px 20px;display:flex;justify-content:center"><canvas id="aiDonut" style="max-width:148px;max-height:148px"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 20px 18px" class="leg-grid">
+          <div class="li"><div class="ls" style="background:#8B5CF6"></div>GPT-4o 38%</div>
+          <div class="li"><div class="ls" style="background:#3B82F6"></div>Claude 3.5 32%</div>
+          <div class="li"><div class="ls" style="background:#10B981"></div>Gemini 1.5 18%</div>
+          <div class="li"><div class="ls" style="background:#F59E0B"></div>Llama 3.3 12%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g-2col-eq fa s3">
+      <div class="card"><div class="ch"><div><div class="ct">Token Consumption</div><div class="cs">Input vs output — 7 days</div></div></div><div class="leg"><div class="li"><div class="ld" style="background:var(--cyan)"></div>Input</div><div class="li"><div class="ld" style="background:var(--violet);opacity:.6"></div>Output</div></div><div style="padding:0 20px 20px"><canvas id="aiTokChart" height="158"></canvas></div></div>
+      <div class="card"><div class="ch"><div><div class="ct">Daily Cost</div><div class="cs">Spend vs budget limit</div></div></div><div class="leg"><div class="li"><div class="ld" style="background:var(--amber)"></div>Daily cost</div><div class="li"><div class="ld" style="background:var(--rose);opacity:.5"></div>Budget cap</div></div><div style="padding:0 20px 20px"><canvas id="aiCostChart" height="158"></canvas></div></div>
+    </div>
+
+    <div class="g-ai-perf fa s4">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Model Performance</div><div class="cs">Real-time metrics per model</div></div><button class="btn btn-xs btn-g">Export</button></div>
+        <div class="tw"><table><thead><tr><th>Model</th><th>Calls</th><th>Latency</th><th>Error Rate</th><th>Cost/1K</th><th>Status</th></tr></thead><tbody id="aiMtbody"></tbody></table></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card" style="flex:1">
+          <div class="ch"><div><div class="ct">Latency Percentiles</div><div class="cs">P50 / P90 / P99</div></div></div>
+          <div style="padding:14px 20px" id="aiLatency"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div><div class="ct">Budget Tracker</div><div class="cs">Monthly spend vs limits</div></div></div>
+          <div style="padding:14px 20px;display:flex;flex-direction:column;gap:13px" id="aiBudget"></div>
+          <div class="cf"><span style="font-size:11.5px;color:var(--text3)">Resets May 1, 2026</span><button class="btn btn-xs btn-g">Set Alerts</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="mbg" id="modal">
+  <div class="mdl">
+    <div class="mh"><span class="mt">Create New Report</span><div class="mx" onclick="closeM()"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Report Name</label><input class="fi" placeholder="e.g. Q2 Revenue Summary"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Type</label><select class="fi"><option>Performance</option><option>Financial</option><option>Customer</option><option>Custom</option></select></div>
+        <div class="fg"><label class="fl">Frequency</label><select class="fi"><option>One-time</option><option>Daily</option><option>Weekly</option><option>Monthly</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Send to</label><input class="fi" placeholder="email@example.com"></div>
+    </div>
+    <div class="mf"><button class="btn btn-g btn-sm" onclick="closeM()">Cancel</button><button class="btn btn-p btn-sm" onclick="closeM()">Create Report</button></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────
+const customers=[
+  {n:'TechFlow Inc',e:'projects@techflow.io',co:'USA',plan:'Enterprise',mrr:4200,st:'Active',j:'Jan 2026',av:'TF',col:'linear-gradient(135deg,#3B82F6,#8B5CF6)'},
+  {n:'RocketSaaS Ltd',e:'team@rocketsaas.io',co:'USA',plan:'Enterprise',mrr:3600,st:'Active',j:'Feb 2026',av:'RS',col:'linear-gradient(135deg,#10B981,#059669)'},
+  {n:'Bloom Agency',e:'hello@bloomagency.com',co:'USA',plan:'Pro',mrr:1800,st:'Active',j:'Jan 2026',av:'BA',col:'linear-gradient(135deg,#10B981,#065F46)'},
+  {n:'NovaTech LLC',e:'contracts@novatech.com',co:'USA',plan:'Pro',mrr:1200,st:'Trial',j:'Apr 2026',av:'NT',col:'linear-gradient(135deg,#F59E0B,#D97706)'},
+  {n:'AlphaMetrics',e:'projects@alphametrics.com',co:'USA',plan:'Pro',mrr:1200,st:'Active',j:'Feb 2026',av:'AM',col:'linear-gradient(135deg,#F97316,#EA580C)'},
+  {n:'FinanceFlow App',e:'dev@financeflow.app',co:'USA',plan:'Pro',mrr:900,st:'Churned',j:'Mar 2026',av:'FF',col:'linear-gradient(135deg,#EF4444,#DC2626)'},
+  {n:'DataViz Pro',e:'data@datavizpro.io',co:'UK',plan:'Pro',mrr:780,st:'Active',j:'Feb 2026',av:'DV',col:'linear-gradient(135deg,#8B5CF6,#7C3AED)'},
+  {n:'NextStep Co',e:'info@nextstep.co',co:'USA',plan:'Pro',mrr:950,st:'Active',j:'Jan 2026',av:'NS',col:'linear-gradient(135deg,#38BDF8,#0284C7)'},
+  {n:'Spark Digital',e:'hello@sparkdigital.com',co:'USA',plan:'Starter',mrr:490,st:'Active',j:'Mar 2026',av:'SD',col:'linear-gradient(135deg,#06B6D4,#0891B2)'},
+  {n:'GreenLeaf Startup',e:'founders@greenleaf.io',co:'CAN',plan:'Starter',mrr:390,st:'Trial',j:'Apr 2026',av:'GL',col:'linear-gradient(135deg,#22C55E,#16A34A)'},
+  {n:'StartupVault',e:'team@startupvault.io',co:'USA',plan:'Starter',mrr:290,st:'Active',j:'Jan 2026',av:'SV',col:'linear-gradient(135deg,#A78BFA,#7C3AED)'},
+  {n:'Pixel Studio',e:'hi@pixelstudio.design',co:'AUS',plan:'Starter',mrr:190,st:'Trial',j:'Apr 2026',av:'PS',col:'linear-gradient(135deg,#FB7185,#E11D48)'},
+  {n:'Sarah Mitchell',e:'sarah@mitchell.design',co:'USA',plan:'Starter',mrr:120,st:'Active',j:'Mar 2026',av:'SM',col:'linear-gradient(135deg,#C084FC,#9333EA)'},
+];
+
+const aiModels=[
+  {id:'gpt4',name:'GPT-4o',prov:'OpenAI',calls:'1,079K',lat:'520ms',err:'0.8%',cost:'$0.030',st:'Healthy',col:'#8B5CF6'},
+  {id:'claude',name:'Claude 3.5',prov:'Anthropic',calls:'908K',lat:'390ms',err:'0.4%',cost:'$0.018',st:'Healthy',col:'#3B82F6'},
+  {id:'gemini',name:'Gemini 1.5',prov:'Google',calls:'511K',lat:'340ms',err:'1.1%',cost:'$0.012',st:'Degraded',col:'#10B981'},
+  {id:'llama',name:'Llama 3.3',prov:'Meta',calls:'341K',lat:'280ms',err:'0.2%',cost:'$0.004',st:'Healthy',col:'#F59E0B'},
+];
+
+const latData=[
+  {name:'GPT-4o',avg:'520ms',col:'#8B5CF6',p50:{v:'380ms',w:38},p90:{v:'580ms',w:58},p99:{v:'1,240ms',w:88}},
+  {name:'Claude 3.5',avg:'390ms',col:'#3B82F6',p50:{v:'295ms',w:30},p90:{v:'420ms',w:42},p99:{v:'890ms',w:68}},
+  {name:'Gemini 1.5',avg:'340ms',col:'#10B981',p50:{v:'260ms',w:26},p90:{v:'380ms',w:38},p99:{v:'720ms',w:55}},
+];
+
+const budgets=[
+  {name:'GPT-4o',spent:1248,limit:2000,col:'#8B5CF6'},
+  {name:'Claude 3.5',spent:824,limit:1000,col:'#3B82F6'},
+  {name:'Gemini 1.5',spent:496,limit:600,col:'#10B981'},
+  {name:'Llama 3.3',spent:182,limit:400,col:'#F59E0B'},
+];
+
+// ─── NAV ────────────────────────────────────────
+const pm={dashboard:'Dashboard',analytics:'Analytics',customers:'Customers',orders:'Orders',products:'Products',revenue:'Revenue',reports:'Reports',settings:'Settings',ai:'AI Monitor'};
+const sm={dashboard:'Overview',analytics:'User Behavior',customers:'All Customers',orders:'Order Management',products:'Product Catalog',revenue:'Financial Overview',reports:'Report Center',settings:'Account Settings',ai:'Model Performance & Usage'};
+
+function nav(p){
+  document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(e=>e.classList.remove('on'));
+  const pg=document.getElementById('page-'+p);
+  if(pg){pg.classList.add('on');initCharts(p);}
+  const ni=document.querySelector(`.ni[data-p="${p}"]`);
+  if(ni)ni.classList.add('on');
+  document.getElementById('bcPage').textContent=pm[p]||p;
+  document.getElementById('bcSub').textContent=sm[p]||'';
+  if(p==='customers')renderC();
+  if(p==='ai'){renderAiTable('all');renderLatency();renderBudget();}
+  if(npOpen)closeNP();
+}
+document.querySelectorAll('.ni[data-p]').forEach(e=>e.addEventListener('click',()=>nav(e.dataset.p)));
+document.querySelectorAll('.dt').forEach(e=>e.addEventListener('click',function(){this.closest('.dtabs').querySelectorAll('.dt').forEach(t=>t.classList.remove('on'));this.classList.add('on');}));
+
+// ─── SIDEBAR ────────────────────────────────────
+let sbCol=false;
+function toggleSB(){sbCol=!sbCol;document.getElementById('sb').classList.toggle('col',sbCol);document.getElementById('main').classList.toggle('exp',sbCol);}
+
+// ─── THEME ──────────────────────────────────────
+let dark=true;
+function toggleTheme(){
+  dark=!dark;
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  document.getElementById('tlabel').textContent=dark?'Light':'Dark';
+  Object.values(charts).forEach(c=>{if(c)c.destroy()});
+  Object.keys(charts).forEach(k=>delete charts[k]);
+  Object.keys(ci).forEach(k=>delete ci[k]);
+  const pg=document.querySelector('.pg.on');
+  if(pg)initCharts(pg.id.replace('page-',''));
+}
+
+// ─── NOTIF ──────────────────────────────────────
+let npOpen=false;
+function toggleNP(){npOpen=!npOpen;document.getElementById('np').classList.toggle('on',npOpen);}
+function closeNP(){npOpen=false;document.getElementById('np').classList.remove('on');}
+document.addEventListener('click',e=>{if(npOpen&&!e.target.closest('#np')&&!e.target.closest('.ib'))closeNP();});
+
+// ─── MODAL ──────────────────────────────────────
+function openM(){document.getElementById('modal').classList.add('on');}
+function closeM(){document.getElementById('modal').classList.remove('on');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeM();});
+
+// ─── SETTINGS PANELS ────────────────────────────
+document.querySelectorAll('.sni').forEach(e=>e.addEventListener('click',()=>{
+  document.querySelectorAll('.sni').forEach(i=>i.classList.remove('on'));
+  document.querySelectorAll('.sp').forEach(p=>p.classList.remove('on'));
+  e.classList.add('on');
+  document.getElementById('panel-'+e.dataset.panel).classList.add('on');
+}));
+
+// ─── CUSTOMERS TABLE ─────────────────────────────
+const stMap={Active:'bg',Trial:'ba',Churned:'br',Potential:'bb'};
+const planMap={Enterprise:'bv',Pro:'bb',Starter:'bgr'};
+
+function renderC(data){
+  const list=data||customers;
+  document.getElementById('cTbody').innerHTML=list.map(c=>`
+    <tr>
+      <td><div class="avrow"><div class="av" style="background:${c.col}">${c.av}</div><div><div class="an">${c.n}</div></div></div></td>
+      <td style="font-size:12px;color:var(--text2)">${c.e}</td>
+      <td><span class="badge ${planMap[c.plan]||'bgr'}">${c.plan}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-weight:600">$${c.mrr.toLocaleString()}</span></td>
+      <td><span class="badge ${stMap[c.st]||'bgr'}">● ${c.st}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${c.j}</td>
+      <td><button class="btn btn-xs btn-g">View</button></td>
+    </tr>`).join('');
+  document.getElementById('cCount').textContent=`${list.length} customers`;
+}
+
+function filterC(){
+  const q=document.getElementById('cSearch').value.toLowerCase();
+  const pl=document.getElementById('cPlan').value;
+  renderC(customers.filter(c=>(c.n.toLowerCase().includes(q)||c.e.toLowerCase().includes(q))&&(!pl||c.plan===pl)));
+}
+
+// Dashboard customer preview (top 5)
+function renderDashC(){
+  document.getElementById('dashCustTbody').innerHTML=customers.slice(0,5).map(c=>`
+    <tr>
+      <td><div class="avrow"><div class="av" style="background:${c.col}">${c.av}</div><div><div class="an">${c.n}</div><div class="ae">${c.e.split('@')[1]}</div></div></div></td>
+      <td><span class="badge ${planMap[c.plan]||'bgr'}">${c.plan}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-weight:600">$${c.mrr.toLocaleString()}</span></td>
+      <td><span class="badge ${stMap[c.st]||'bgr'}">● ${c.st}</span></td>
+    </tr>`).join('');
+}
+
+// ─── AI RENDER ───────────────────────────────────
+function renderAiTable(f){
+  const list=f==='all'?aiModels:aiModels.filter(m=>m.id===f);
+  const sb={Healthy:'bg',Degraded:'ba',Down:'br'};
+  document.getElementById('aiMtbody').innerHTML=list.map(m=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${m.col};flex-shrink:0"></div><div><div style="font-size:13px;font-weight:500">${m.name}</div><div style="font-size:11px;color:var(--text3)">${m.prov}</div></div></div></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${m.calls}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${m.lat}</td>
+      <td><span class="badge ${parseFloat(m.err)>1?'br':'bg'}">${m.err}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${m.cost}</td>
+      <td><span class="badge ${sb[m.st]||'bgr'}">● ${m.st}</span></td>
+    </tr>`).join('');
+}
+
+function renderLatency(){
+  document.getElementById('aiLatency').innerHTML=latData.map(m=>`
+    <div class="latbar">
+      <div class="lath"><span class="latn">${m.name}</span><span class="lata">avg ${m.avg}</span></div>
+      ${['P50','P90','P99'].map(p=>`
+        <div class="latrow">
+          <span class="latp">${p}</span>
+          <div class="pt" style="flex:1"><div class="pf" style="width:${m[p.toLowerCase()].w}%;background:${m.col};opacity:${p==='P50'?1:p==='P90'?.7:.4}"></div></div>
+          <span class="latv">${m[p.toLowerCase()].v}</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function renderBudget(){
+  document.getElementById('aiBudget').innerHTML=budgets.map(b=>{
+    const pct=Math.round(b.spent/b.limit*100);
+    const warn=pct>=82;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:${b.col}"></div><span style="font-size:12.5px;font-weight:500">${b.name}</span></div>
+        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:11px;color:var(--text3)">$${b.spent} / $${b.limit}</span><span style="font-size:11px;font-weight:600;color:${warn?'var(--rose)':b.col}">${pct}%</span></div>
+      </div>
+      <div class="pt"><div class="pf" style="width:${pct}%;background:${warn?'var(--rose)':b.col}"></div></div>
+      ${warn?`<div style="font-size:10.5px;color:var(--rose);margin-top:3px">⚠ ${100-pct}% remaining</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function aiFilterChange(){renderAiTable(document.getElementById('aiFilter').value);}
+function aiRefresh(){
+  const b=document.getElementById('aiRefBtn');b.textContent='Refreshing…';b.disabled=true;
+  setTimeout(()=>{b.textContent='↺ Refresh';b.disabled=false;document.getElementById('aiUp').textContent='Updated just now';},1200);
+}
+
+// ─── CHARTS ──────────────────────────────────────
+const charts={};const ci={};
+Chart.defaults.font.family='Outfit';
+
+function gColor(){return dark?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)';}
+function ttBase(){return{backgroundColor:dark?'#141F30':'#fff',borderColor:dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)',borderWidth:1,titleColor:dark?'#6B84A8':'#4E6580',bodyColor:dark?'#E8F0FF':'#0D1B2A',padding:10,titleFont:{family:'Outfit',size:11},bodyFont:{family:'JetBrains Mono',size:12}};}
+function mk(id,cfg){const c=document.getElementById(id);if(!c)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(c.getContext('2d'),cfg);}
+
+function initCharts(p){
+  if(ci[p])return;ci[p]=1;
+  setTimeout(()=>{
+    if(p==='dashboard'){initDashCharts();}
+    if(p==='analytics'){initAnalyticsCharts();}
+    if(p==='revenue'){initRevenueCharts();}
+    if(p==='ai'){initAICharts();}
+  },60);
+}
+
+function initDashCharts(){
+  const mo=['Nov','Dec','Jan','Feb','Mar','Apr'];
+  const rev=[31200,35800,38400,41200,40800,48295];
+  const tgt=[32000,36000,39000,42000,43000,46000];
+  const c=document.getElementById('revChart');
+  if(c){const g=c.getContext('2d').createLinearGradient(0,0,0,185);g.addColorStop(0,'rgba(59,130,246,.2)');g.addColorStop(1,'rgba(59,130,246,0)');
+    mk('revChart',{type:'line',data:{labels:mo,datasets:[
+      {data:rev,borderColor:'#3B82F6',backgroundColor:g,borderWidth:2.5,fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#3B82F6',pointBorderColor:dark?'#101828':'#fff',pointBorderWidth:2,pointHoverRadius:6},
+      {data:tgt,borderColor:'rgba(139,92,246,.4)',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,4],fill:false,tension:0.4,pointRadius:0}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` $${c.raw.toLocaleString()}`}}},scales:{x:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:11}}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{family:'JetBrains Mono',size:10},callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}}});
+  }
+  mk('donut1',{type:'doughnut',data:{labels:['Organic','Paid','Referral','Direct'],datasets:[{data:[42,28,18,12],backgroundColor:['#3B82F6','#8B5CF6','#10B981','#F59E0B'],borderColor:dark?'#101828':'#fff',borderWidth:3,hoverOffset:5}]},options:{responsive:true,cutout:'71%',plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.raw}%`}}}}});
+}
+
+function initAnalyticsCharts(){
+  const days=Array.from({length:30},(_,i)=>{const d=new Date(2026,3,1);d.setDate(d.getDate()+i);return d.toLocaleDateString('en',{month:'short',day:'numeric'})});
+  const dau=[380,412,395,440,468,425,388,502,520,498,534,571,549,590,612,588,632,665,641,680,702,689,715,740,728,762,748,780,795,812];
+  const c2=document.getElementById('dauChart');
+  if(c2){const g2=c2.getContext('2d').createLinearGradient(0,0,0,155);g2.addColorStop(0,'rgba(6,182,212,.2)');g2.addColorStop(1,'rgba(6,182,212,0)');
+    mk('dauChart',{type:'line',data:{labels:days,datasets:[{data:dau,borderColor:'#06B6D4',backgroundColor:g2,borderWidth:2,fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#06B6D4'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.raw} users`}}},scales:{x:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:9},maxTicksLimit:6}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:10}}}}}});
+  }
+  mk('devChart',{type:'bar',data:{labels:['Desktop','Mobile','Tablet'],datasets:[{data:[58,32,10],backgroundColor:['#3B82F6','#8B5CF6','#10B981'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{grid:{display:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4'}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',callback:v=>v+'%'}}}}});
+}
+
+function initRevenueCharts(){
+  const mo=['May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+  const nw=[4200,3800,5100,6200,5800,7100,6900,8200,7800,9100,8600,10200];
+  const ch=[1100,980,1200,1350,1180,1420,1290,1580,1410,1620,1480,1750];
+  const nt=nw.map((v,i)=>v-ch[i]);
+  mk('mrrChart',{type:'bar',data:{labels:mo,datasets:[
+    {label:'New MRR',data:nw,backgroundColor:'rgba(16,185,129,.7)',borderRadius:4,borderSkipped:false},
+    {label:'Churned',data:ch.map(v=>-v),backgroundColor:'rgba(244,63,94,.6)',borderRadius:4,borderSkipped:false},
+    {label:'Net',data:nt,type:'line',borderColor:'#3B82F6',borderWidth:2.5,fill:false,tension:0.4,pointRadius:3,pointBackgroundColor:'#3B82F6',pointBorderColor:dark?'#101828':'#fff',pointBorderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` $${Math.abs(c.raw).toLocaleString()}`}}},scales:{x:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:10}}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{family:'JetBrains Mono',size:10},callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}}});
+}
+
+function initAICharts(){
+  const hrs=Array.from({length:24},(_,i)=>`${(new Date().getHours()-23+i+24)%24}:00`);
+  const calls=[2100,1850,1620,1400,1200,980,1100,1800,3200,4800,5600,6200,6800,6400,5900,6100,6600,7200,7800,7400,6900,5800,4600,3800];
+  const errs=calls.map(v=>Math.round(v*(.008+Math.random()*.008)));
+  const c3=document.getElementById('aiCallsChart');
+  if(c3){const g3=c3.getContext('2d').createLinearGradient(0,0,0,170);g3.addColorStop(0,'rgba(139,92,246,.2)');g3.addColorStop(1,'rgba(139,92,246,0)');
+    mk('aiCallsChart',{type:'line',data:{labels:hrs,datasets:[
+      {data:calls,borderColor:'#8B5CF6',backgroundColor:g3,borderWidth:2,fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4},
+      {data:errs,borderColor:'var(--rose)',backgroundColor:'transparent',borderWidth:1.5,fill:false,tension:0.3,pointRadius:0,yAxisID:'y2'}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.dataset.label||'Errors'}: ${c.raw.toLocaleString()}`}}},scales:{x:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:9},maxTicksLimit:8}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{family:'JetBrains Mono',size:10},callback:v=>(v/1000).toFixed(0)+'k'}},y2:{position:'right',grid:{display:false},ticks:{color:'#F43F5E',font:{size:9},callback:v=>v+' err'}}}}});
+  }
+  mk('aiDonut',{type:'doughnut',data:{labels:['GPT-4o','Claude 3.5','Gemini 1.5','Llama 3.3'],datasets:[{data:[38,32,18,12],backgroundColor:['#8B5CF6','#3B82F6','#10B981','#F59E0B'],borderColor:dark?'#101828':'#fff',borderWidth:3,hoverOffset:5}]},options:{responsive:true,cutout:'70%',plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.raw}%`}}}}});
+  const d7=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  mk('aiTokChart',{type:'bar',data:{labels:d7,datasets:[{label:'Input',data:[2.1,2.4,2.8,3.1,3.4,2.2,1.8],backgroundColor:'rgba(6,182,212,.75)',borderRadius:4,borderSkipped:false},{label:'Output',data:[0.8,0.9,1.1,1.2,1.4,0.9,0.7],backgroundColor:'rgba(139,92,246,.55)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}B`}}},scales:{x:{grid:{display:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4'}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{family:'JetBrains Mono',size:10},callback:v=>v+'B'}}}}});
+  const cd=Array.from({length:27},(_,i)=>`Apr ${i+1}`);
+  const dc=cd.map(()=>Math.round(85+Math.random()*55));
+  const bl=Array(27).fill(133);
+  const c4=document.getElementById('aiCostChart');
+  if(c4){const g4=c4.getContext('2d').createLinearGradient(0,0,0,158);g4.addColorStop(0,'rgba(245,158,11,.18)');g4.addColorStop(1,'rgba(245,158,11,0)');
+    mk('aiCostChart',{type:'line',data:{labels:cd,datasets:[{data:dc,borderColor:'#F59E0B',backgroundColor:g4,borderWidth:2,fill:true,tension:0.4,pointRadius:0},{data:bl,borderColor:'rgba(244,63,94,.45)',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],fill:false,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{...ttBase(),callbacks:{label:c=>` $${c.raw}`}}},scales:{x:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{size:9},maxTicksLimit:7}},y:{grid:{color:gColor(),drawBorder:false},ticks:{color:dark?'#3A4F6A':'#9AAFC4',font:{family:'JetBrains Mono',size:10},callback:v=>'$'+v}}}}});
+  }
+}
+
+// ─── INIT ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  renderDashC();
+  renderC();
+  initDashCharts();
+  ci['dashboard']=1;
+});
+
+// ─── MOBILE SIDEBAR ──────────────────────────────
+function toggleMobSB(){
+  const sb=document.getElementById('sb');
+  const ov=document.getElementById('sbOverlay');
+  const isOpen=sb.classList.contains('mob');
+  if(isOpen){sb.classList.remove('mob');ov.classList.remove('on');}
+  else{sb.classList.add('mob');ov.classList.add('on');}
+}
+function closeMobSB(){
+  document.getElementById('sb').classList.remove('mob');
+  document.getElementById('sbOverlay').classList.remove('on');
+}
+// Close mob sidebar on nav click (mobile)
+document.querySelectorAll('.ni[data-p]').forEach(e=>e.addEventListener('click',()=>{
+  if(window.innerWidth<=768)closeMobSB();
+}));
+// Handle window resize
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>768){
+    document.getElementById('sb').classList.remove('mob');
+    document.getElementById('sbOverlay').classList.remove('on');
+  }
+});
+
+</script>
+</body>
+</html>
