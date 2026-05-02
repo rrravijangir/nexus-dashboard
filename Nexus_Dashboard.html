@@ -469,14 +469,18 @@ select.fi{cursor:pointer}
   </div>
 
   <div class="sb-foot">
-    <div class="urow">
+    <div class="urow" title="Click to logout" onclick="doLogout()" style="cursor:pointer" title="Logout">
       <div class="uav">AK</div>
       <div style="flex:1;min-width:0">
         <div class="un">Alex Kumar</div>
         <div class="ur">Admin</div>
       </div>
-      <div class="udot"></div>
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0" title="Logout"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </div>
+    <button onclick="doLogout()" style="width:100%;margin-top:6px;padding:7px;border-radius:var(--rs);border:1px solid rgba(244,63,94,.2);background:rgba(244,63,94,.06);color:var(--rose);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;font-family:'Outfit',sans-serif" onmouseover="this.style.background='rgba(244,63,94,.12)'" onmouseout="this.style.background='rgba(244,63,94,.06)'">
+      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </button>
   </div>
 </aside>
 
@@ -527,6 +531,9 @@ select.fi{cursor:pointer}
       <button class="btn btn-p btn-sm" onclick="openM()">
         <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Report
+      </button>
+      <button class="btn btn-g btn-sm" onclick="doLogout()" title="Sign out" style="color:var(--rose);border-color:rgba(244,63,94,.25)">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
   </header>
@@ -897,6 +904,46 @@ select.fi{cursor:pointer}
 </div>
 
 <script>
+// ═══ AUTH GUARD ════════════════════════════════
+(function() {
+  const SESSION_KEY = 'nexus_session';
+  try {
+    const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (!session || !session.email) {
+      window.location.replace('index.html');
+    }
+  } catch(e) {
+    window.location.replace('index.html');
+  }
+})();
+
+// ═══ SESSION HELPERS ════════════════════════════
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('nexus_session')); }
+  catch { return null; }
+}
+function doLogout() {
+  localStorage.removeItem('nexus_session');
+  window.location.replace('index.html');
+}
+function populateUserInfo() {
+  const s = getSession();
+  if (!s) return;
+  const name = s.name || s.email;
+  const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  // Update sidebar user
+  document.querySelectorAll('.un').forEach(el => el.textContent = name);
+  document.querySelectorAll('.uav').forEach(el => el.textContent = initials);
+  document.querySelectorAll('.ur').forEach(el => el.textContent = s.company || 'Admin');
+  // Update settings profile
+  const fi = document.querySelectorAll('.fi');
+  fi.forEach(inp => {
+    if (inp.value === 'Alex Kumar') inp.value = name;
+    if (inp.value === 'alex@freelancekit.io' && inp.type==='email') inp.value = s.email;
+    if (inp.value === 'billing@freelancekit.io') inp.value = s.email;
+  });
+}
+
 // ─── DATA ───────────────────────────────────────
 const customers=[
   {n:'TechFlow Inc',e:'projects@techflow.io',co:'USA',plan:'Enterprise',mrr:4200,st:'Active',j:'Jan 2026',av:'TF',col:'linear-gradient(135deg,#3B82F6,#8B5CF6)'},
@@ -1154,6 +1201,7 @@ function initAICharts(){
 
 // ─── INIT ────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
+  populateUserInfo();
   renderDashC();
   renderC();
   initDashCharts();
