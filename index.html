@@ -431,6 +431,11 @@ a{text-decoration:none;color:inherit}
       </button>
 
       <p style="font-size:12px;color:var(--text3);text-align:center">New to Nexus? <a onclick="show('register')" style="color:var(--blue);cursor:pointer;font-weight:500">Create a free account</a></p>
+      <div style="margin-top:16px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.18);border-radius:8px;padding:11px 14px;text-align:center">
+        <p style="font-size:11.5px;color:var(--text2);margin:0 0 4px;font-weight:500">Demo credentials</p>
+        <p style="font-size:12px;color:var(--text);margin:0;font-family:'JetBrains Mono',monospace">demo@nexus.io &nbsp;/&nbsp; nexus123</p>
+        <button onclick="document.getElementById('loginEmail').value='demo@nexus.io';document.getElementById('loginPw').value='nexus123';" style="margin-top:8px;font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.1);color:var(--blue);cursor:pointer;font-family:'Outfit',sans-serif">Auto-fill credentials</button>
+      </div>
     </div>
 
     <!-- ═══ REGISTER ═══ -->
@@ -680,20 +685,64 @@ function showErr(inpId,errId,show){
 }
 
 // ─── LOGIN ───────────────────────────────────────
+// ── AUTH STORAGE ────────────────────────────────
+const USERS_KEY = 'nexus_users';
+const SESSION_KEY = 'nexus_session';
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; }
+  catch { return []; }
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)); }
+  catch { return null; }
+}
+function createSession(user) {
+  const session = { email: user.email, name: user.name, company: user.company, loginAt: Date.now() };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+// Pre-load demo account on first visit
+function initDemoAccount() {
+  const users = getUsers();
+  const demoExists = users.find(u => u.email === 'demo@nexus.io');
+  if (!demoExists) {
+    users.push({ email: 'demo@nexus.io', password: 'nexus123', name: 'Alex Kumar', company: 'Nexus Demo' });
+    saveUsers(users);
+  }
+}
+
 function doLogin(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const pw=document.getElementById('loginPw').value;
-  let valid=true;
-  showErr('loginEmail','loginEmailErr',!isEmail(email));
-  showErr('loginPw','loginPwErr',pw.length<1);
-  if(!isEmail(email)||pw.length<1){shake('view-login');return;}
-  setLoading('loginBtn','loginSpinner','loginBtnText',true,'Signing in…');
-  // Simulate API call
-  setTimeout(()=>{
-    setLoading('loginBtn','loginSpinner','loginBtnText',false,'Sign in to Nexus');
-    // Simulate redirect to dashboard
-    window.location.href='Nexus_Dashboard.html';
-  },1600);
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pw = document.getElementById('loginPw').value;
+
+  showErr('loginEmail','loginEmailErr', !isEmail(email));
+  showErr('loginPw','loginPwErr', pw.length < 1);
+  if (!isEmail(email) || pw.length < 1) { shake('view-login'); return; }
+
+  setLoading('loginBtn','loginSpinner','loginBtnText', true, 'Signing in…');
+
+  setTimeout(() => {
+    const users = getUsers();
+    const user = users.find(u => u.email === email && u.password === pw);
+
+    if (!user) {
+      setLoading('loginBtn','loginSpinner','loginBtnText', false, 'Sign in to Nexus');
+      // Show wrong credentials error
+      document.getElementById('loginPwErr').textContent = 'Wrong email or password. Try demo@nexus.io / nexus123';
+      showErr('loginEmail','loginEmailErr', true);
+      showErr('loginPw','loginPwErr', true);
+      shake('view-login');
+      return;
+    }
+
+    createSession(user);
+    setLoading('loginBtn','loginSpinner','loginBtnText', true, 'Redirecting…');
+    setTimeout(() => { window.location.href = 'Nexus_Dashboard.html'; }, 400);
+  }, 900);
 }
 
 // ─── REGISTER ────────────────────────────────────
@@ -729,11 +778,15 @@ function doForgot(resend=false){
 
 // ─── VERIFY OTP ──────────────────────────────────
 function doVerify(){
-  setLoading('verifyBtn','verifySpinner','verifyBtnText',true,'Verifying…');
-  setTimeout(()=>{
-    setLoading('verifyBtn','verifySpinner','verifyBtnText',false,'Verify & continue');
-    window.location.href='Nexus_Dashboard.html';
-  },1600);
+  setLoading('verifyBtn','verifySpinner','verifyBtnText', true, 'Verifying…');
+  setTimeout(() => {
+    // Get the user who just registered
+    const email = document.getElementById('verifyEmail').textContent;
+    const users = getUsers();
+    const user = users.find(u => u.email === email);
+    if (user) createSession(user);
+    setTimeout(() => { window.location.href = 'Nexus_Dashboard.html'; }, 300);
+  }, 1200);
 }
 
 function resendOTP(){
@@ -761,6 +814,11 @@ document.addEventListener('keydown',e=>{
   else if(active.id==='view-register')doRegister();
   else if(active.id==='view-forgot')doForgot();
 });
+
+// ─── INIT ────────────────────────────────────────
+initDemoAccount();
+// If already logged in, redirect to dashboard
+if (getSession()) { window.location.href = 'Nexus_Dashboard.html'; }
 
 // ─── SHAKE ANIMATION ─────────────────────────────
 const shakeStyle=document.createElement('style');
